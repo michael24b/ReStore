@@ -16,8 +16,8 @@ function Header() {
               <Nav.Link href="/contact">
                 <i className="fa-solid fa-message"></i> Contact
               </Nav.Link>
-              <Nav.Link href="/cart">
-                <i className="fas fa-shopping-cart"></i> Cart
+              <Nav.Link href="/basket">
+                <i className="fas fa-shopping-cart"></i> 0
               </Nav.Link>
               <Nav.Link href="#link">
                 <i className="fa-solid fa-right-to-bracket"></i> Login

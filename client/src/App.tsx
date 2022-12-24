@@ -7,6 +7,7 @@ import ProductDetails from "./screens/ProductDetails";
 import Contact from "./screens/Contact";
 import About from "./screens/About";
 import NotFound from "./screens/NotFound";
+import BasketScreen from "./screens/BasketScreen";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/Contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/basket" element={<BasketScreen />} />
           </Routes>
         </Container>
       </main>

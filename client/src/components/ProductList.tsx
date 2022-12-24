@@ -1,12 +1,22 @@
-import { Card, Button } from "react-bootstrap";
+import { Card, Button, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { Product } from "../models/product";
+import { useState } from "react";
+import agent from "../api/agent";
 
 interface Props {
   product: Product;
 }
 
 function ProductList({ product }: Props) {
+  const [loading, setLoading] = useState(false);
+
+  const handlerAddItem = (productId: number) => {
+    setLoading(true);
+    agent.Basket.addItem(productId)
+      .catch((error) => console.log(error))
+      .finally(() => setLoading(false));
+  };
   return (
     <Card className="my-3 p-3 rounded">
       {/* <Link to={`/product/${product._id}`}> */}
@@ -18,8 +28,8 @@ function ProductList({ product }: Props) {
       {/* </Link> */}
       <Card.Body className="d-grid">
         {/* <Link to={`/product/${product._id}`}> */}
-        <Card.Title as="div" className="mx-auto">
-          <strong>{product.name}</strong>
+        <Card.Title as="div" className="mx-auto d-flex">
+          <strong className="text-center ">{product.name}</strong>
         </Card.Title>
         {/* </Link> */}
 
@@ -41,7 +51,25 @@ function ProductList({ product }: Props) {
           {/* <Card.Footer className="row g-3"> */}
 
           <Link to="/" className=" p-1 flex-fill text-center">
-            <Button className=" btn-sm">ADD TO CART</Button>
+            <Button
+              className=" btn-sm"
+              onClick={() => handlerAddItem(product.id)}
+            >
+              {loading ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                  <span> LOADING... </span>
+                </>
+              ) : (
+                <span>ADD TO CART</span>
+              )}
+            </Button>
           </Link>
           <Link to={`/product/${product.id}`} className=" p-1 flex-fill">
             <Button className=" btn-sm ">VIEW</Button>
