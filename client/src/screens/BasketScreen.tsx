@@ -1,105 +1,159 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Basket } from "../models/basket";
-// import { useDispatch, useSelector } from "react-redux";
-import {
-  Row,
-  Col,
-  ListGroup,
-  Image,
-  Form,
-  Button,
-  Table,
-} from "react-bootstrap";
+import { Button, Table, Image, Container, Col, Row } from "react-bootstrap";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
 import agent from "../api/agent";
-// import { addToCart, removeFromCart } from "../actions/cartActions";
+import { currencyFormat, getCookie } from "../util/util";
 
 const BasketScreen = () => {
-  // const productId = match.params.id;
-  //   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [basket, setBasket] = useState<Basket | null>(null);
   const [error, setError] = useState<any>(null);
 
-  //   const location = useLocation();
   const navigate = useNavigate();
 
-  //   const qty = location.search ? Number(location.search.split("=")[1]) : 1;
-  //   console.log("qty :");
-  //   console.log(qty);
-  //   const dispatch = useDispatch();
-
-  //   const cart = useSelector((state) => state.cart);
-  //   const { cartItems } = cart;
-
-  //   const userLogin = useSelector((state) => state.userLogin);
-  //   const { userInfo } = userLogin;
-
   useEffect(() => {
-    agent.Basket.get()
-      .then((basket) => setBasket(basket))
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
+    const buyerId = getCookie("buyerId");
+    console.log(buyerId);
+    if (buyerId) {
+      agent.Basket.get()
+        .then((basket) => setBasket(basket))
+        .catch((error) => setError(error))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  //   const removeFromCartHandler = (id) => {
-  //     dispatch(removeFromCart(id));
-  //   };
+  const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  //   const checkoutHandler = () => {
-  //     if (userInfo) {
-  //       navigate("/shipping");
-  //     } else {
-  //       navigate("/login");
-  //     }
-  // history.push("/login?redirect=shipping");
-  //new way
-  // navigate(`/cart/${id}?qty=${qty}`);
-  //   };
+  const removeItemState = (productId: number, quantity: number) => {
+    if (!basket) return;
+    const items = [...basket.items];
+    const itemIndex = items.findIndex((i) => i.productId === productId);
+    if (itemIndex >= 0) {
+      items[itemIndex].quantity -= quantity;
+      if (items[itemIndex].quantity === 0) items.splice(itemIndex, 1);
+      setBasket((prevState) => {
+        return { ...prevState!, items };
+      });
+    }
+  };
+
+  const removeItem = (ProductId: number, quantity: number) => {
+    agent.Basket.removeItem(ProductId, quantity)
+      .then(() => removeItemState(ProductId, quantity))
+      .catch((error) => setError(error));
+  };
+
+  const addItem = (ProductId: number) => {
+    agent.Basket.addItem(ProductId)
+      .then((basket) => setBasket(basket))
+      .catch((error) => setError(error));
+  };
+
+  const subtotal =
+    basket?.items.reduce((sum, item) => sum + item.quantity * item.price, 0) ??
+    0;
+  const deliveryFee = subtotal > 10000 ? 0 : 500;
+
+  console.log(error);
 
   return (
     <>
-      {/* // <Row> */}
-      {/* <Col md={8}> */}
-      <h1>Basket Screen </h1>
+      <h1>Basket Screen {itemCount}</h1>
       {loading ? (
         <Loader />
       ) : error ? (
-        <Message variant="danger">{error}</Message>
+        <Message variant="danger">{error.request}</Message>
       ) : basket ? (
-        <Table striped bordered hover className="mt-5">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Price</th>
-              <th>Quantity</th>
-              <th>Subtotal</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {basket.items.map((item) => (
-              <tr key={item.productId}>
-                <td>{item.name}</td>
-                <td>${(item.price / 100).toFixed(2)}</td>
-                <td>{item.quantity}</td>
-                <td>${((item.price / 100) * item.quantity).toFixed(2)}</td>
-                <td>
-                  {" "}
-                  <Button
-                    variant="danger"
-                    className="btn-sm"
-                    // onClick={() => deleteHandler(product._id)}
-                  >
-                    <i className="fas fa-trash"></i>
-                  </Button>
-                </td>
+        <>
+          <Table striped bordered hover className="mt-5">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th className="text-center">Quantity</th>
+                <th>Subtotal</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {basket.items.map((item) => (
+                <tr key={item.productId} className="align-middle ">
+                  <td className="">
+                    <Image
+                      src={item.pictureUrl}
+                      className="img-fluid img"
+                    ></Image>
+                    {item.name}
+                  </td>
+                  <td>{currencyFormat(item.price)}</td>
+                  <td className="text-center ">
+                    <i
+                      className="fa-solid fa-minus"
+                      onClick={() => removeItem(item.productId, 1)}
+                    ></i>
+                    <span> {item.quantity} </span>
+                    <i
+                      className="fa-solid fa-plus"
+                      onClick={() => addItem(item.productId)}
+                    ></i>
+                  </td>
+                  <td>${((item.price / 100) * item.quantity).toFixed(2)}</td>
+                  <td>
+                    {" "}
+                    <Button
+                      variant="danger"
+                      className="btn-sm"
+                      onClick={() => removeItem(item.productId, item.quantity)}
+                    >
+                      <i className="fas fa-trash"></i>
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          <Container className="mt-5">
+            <Row>
+              <Col md={6}>
+                <h1>Container 1</h1>
+              </Col>
+              <Col md={6}>
+                <Table striped bordered hover size="sm">
+                  <tbody>
+                    <tr>
+                      <td className="text-start ps-5">Subtotal</td>
+                      <td className="text-end pe-5 ">
+                        {currencyFormat(subtotal)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="text-start ps-5">Delivery fee*</td>
+                      <td className="text-end pe-5 ">
+                        {currencyFormat(deliveryFee)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="text-start ps-5">Total</td>
+                      <td className="text-end pe-5 ">
+                        {currencyFormat(subtotal + deliveryFee)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="text-center" colSpan={2}>
+                        *Orders over $100 quantity for free delivery
+                      </td>
+                    </tr>
+                  </tbody>
+                </Table>
+              </Col>
+            </Row>
+          </Container>
+        </>
       ) : (
         <Message>
           Your basket is empty <Link to="/">Go Back</Link>
@@ -109,76 +163,3 @@ const BasketScreen = () => {
   );
 };
 export default BasketScreen;
-
-//   <ListGroup variant="flush">
-//     {cartItems.map((item) => (
-//       <ListGroup.Item key={item.product}>
-//         <Row>
-//           <Col md={2}>
-//             <Image src={item.image} alt={item.name} fluid rounded />
-//           </Col>
-//           <Col md={3}>
-//             <Link to={`/product/${item.product}`}>{item.name}</Link>
-//           </Col>
-//           <Col md={2}>${item.price}</Col>
-//           <Col md={2}>
-//             <Form.Control
-//               size="sm"
-//               as="select"
-//               value={item.qty}
-//               onChange={(e) =>
-//                 dispatch(
-//                   addToCart(item.product, Number(e.target.value))
-//                 )
-//               }
-//             >
-//               1
-//               {[...Array(item.countInStock).keys()].map((x) => (
-//                 <option key={x + 1} value={x + 1}>
-//                   {x + 1}
-//                 </option>
-//               ))}
-//             </Form.Control>
-//           </Col>
-//           <Col md={2}>
-//             <Button
-//               type="button"
-//               variant="light"
-//               onClick={() => removeFromCartHandler(item.product)}
-//             >
-//               <i className="fas fa-trash"></i>
-//             </Button>
-//           </Col>
-//         </Row>
-//       </ListGroup.Item>
-//     ))}
-//   </ListGroup>
-
-//   </Col>
-//   <Col md={4}>
-//     <Card>
-//       <ListGroup variant="flush">
-//         <ListGroup.Item>
-//           <h2>
-//             Subtotal ({cartItems.reduce((acc, item) => acc + item.qty, 0)})
-//             items
-//           </h2>
-//           $
-//           {cartItems
-//             .reduce((acc, item) => acc + item.qty * item.price, 0)
-//             .toFixed(2)}
-//         </ListGroup.Item>
-//         <ListGroup.Item>
-//           <Button
-//             type="button"
-//             className="btn-block"
-//             disabled={cartItems.length === 0}
-//             onClick={checkoutHandler}
-//           >
-//             Proceed To Checkout
-//           </Button>
-//         </ListGroup.Item>
-//       </ListGroup>
-//     </Card>
-//   </Col>
-// </Row>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Product } from "../models/product";
 import { useState } from "react";
 import agent from "../api/agent";
+import { currencyFormat } from "../util/util";
 
 interface Props {
   product: Product;
@@ -42,7 +43,7 @@ function ProductList({ product }: Props) {
 
         {/* <Card.Text as="p">{product.description}</Card.Text> */}
         <Card.Text as="h4" className="mx-auto">
-          ${product.price && (product.price / 100).toFixed(2)}
+          {product.price && currencyFormat(product.price)}
         </Card.Text>
         <Card.Text as="p" className="mx-auto">
           {product.brand} / {product.type}
