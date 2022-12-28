@@ -9,10 +9,14 @@ import {
   Form,
   Button,
 } from "react-bootstrap";
-import { Product } from "../models/product";
+import { useAppDispatch, useAppSelector } from "../store/configureStore";
+import {
+  addBasketItemAsync,
+  removeBasketItemAsync,
+} from "../slices/basketSlice";
+import { fetchProductAsync, productSelectors } from "../slices/catalogSlice";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
-import agent from "../api/agent";
 import { currencyFormat } from "../util/util";
 
 // interface Props {
@@ -21,55 +25,65 @@ import { currencyFormat } from "../util/util";
 // }
 
 function ProductDetails() {
+  const { basket } = useAppSelector((state) => state.basket);
+  const dispatch = useAppDispatch();
+  console.log("Basket");
+  console.log(basket);
   const { id } = useParams<{ id: string }>();
   const intId = id ? parseInt(id) : 0;
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>("");
+  const product = useAppSelector((state) =>
+    productSelectors.selectById(state, intId)
+  );
+  const { status: productStatus } = useAppSelector((state) => state.catalog);
+  console.log("Client error");
+
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<any>("");
   const [quantity, setQuantity] = useState(0);
-  const item = {
-    quantity: 3,
-  };
+  const item = basket?.items.find((i) => i.productId === product?.id);
 
   useEffect(() => {
     if (item) setQuantity(item.quantity);
-    agent.Products.details(intId)
-      .then((res) => setProduct(res))
-      .catch((error) => setError(error.response))
-      .finally(() => setLoading(false));
-  }, [intId, item]);
+    if (!product) dispatch(fetchProductAsync(intId));
+  }, [intId, item, dispatch, product]);
 
-  const handleInputChange = (event: any) => {
-    if (event.target.value >= 0) {
+  function handleInputChange(event: any) {
+    if (event.target.value > 0) {
       setQuantity(parseInt(event.target.value));
     }
-  };
+  }
 
-  const handleUpdateCart = () => {
+  function handleUpdateCart() {
     if (!item || quantity > item.quantity) {
-      const updateQuantity = item ? quantity - item.quantity : quantity;
-      // agent.Basket.addItem(product?.id!, updateQuantity)
-      //   .then((basket) => setBasket(basket))
-      //   .catch((error) => console.log(error));
+      const updatedQuantity = item ? quantity - item.quantity : quantity;
+      dispatch(
+        addBasketItemAsync({
+          productId: product?.id!,
+          quantity: updatedQuantity,
+        })
+      );
     } else {
-      const updateQuantity = item.quantity - quantity;
-      // agent.basket
-      //   .removeItem(product?.id!, updateQuantity)
-      //   .then(() => removeItem(product?.id!, quantity))
-      //   .catch((error) => console.log(error));
+      const updatedQuantity = item.quantity - quantity;
+      dispatch(
+        removeBasketItemAsync({
+          productId: product?.id!,
+          quantity: updatedQuantity,
+        })
+      );
     }
-  };
+  }
 
   return (
     <>
       <Link className="btn btn-light my-3" to="/">
         Go Back
       </Link>
-      {loading ? (
+      {productStatus.includes("pending") ? (
         <Loader />
-      ) : error ? (
-        <Message variant="danger">{error}</Message>
-      ) : product ? (
+      ) : // : error ? (
+      //   <Message variant="danger">{error}</Message>
+      // )
+      product ? (
         <>
           {/* <Meta title={product.name} /> */}
           <Row className="d-flex">
@@ -126,6 +140,7 @@ function ProductDetails() {
                   value={quantity}
                 ></Form.Control>
                 <Button
+                  className="btn btn-outline-secondary"
                   onClick={handleUpdateCart}
                   disabled={
                     item?.quantity === quantity || (!item && quantity === 0)
@@ -138,7 +153,7 @@ function ProductDetails() {
           </Row>
         </>
       ) : (
-        <h3>Product Not Found</h3>
+        <h3>Product Not Found!</h3>
       )}
     </>
   );

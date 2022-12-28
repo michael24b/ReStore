@@ -8,8 +8,28 @@ import Contact from "./screens/Contact";
 import About from "./screens/About";
 import NotFound from "./screens/NotFound";
 import BasketScreen from "./screens/BasketScreen";
+import CheckoutPage from "./screens/CheckoutPage";
+import { getCookie } from "./util/util";
+import agent from "./api/agent";
+import { useEffect, useState } from "react";
+import { useAppDispatch } from "./store/configureStore";
+import { setBasket } from "./slices/basketSlice";
 
 function App() {
+  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const buyerId = getCookie("buyerId");
+    if (buyerId) {
+      agent.Basket.get()
+        .then((basket) => dispatch(setBasket(basket)))
+        .catch((error) => console.log(error))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [dispatch]);
   return (
     <Router>
       <Header />
@@ -22,6 +42,7 @@ function App() {
             <Route path="/Contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/basket" element={<BasketScreen />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
           </Routes>
         </Container>
       </main>

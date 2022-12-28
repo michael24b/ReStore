@@ -7,24 +7,34 @@ import { Col, Row } from "react-bootstrap";
 import agent from "../api/agent";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import { useAppDispatch, useAppSelector } from "../store/configureStore";
+import { fetchProductsAsync, productSelectors } from "../slices/catalogSlice";
 
 function HomeScreen() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [products, setProducts] = useState<Product[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>("");
 
+  const products = useAppSelector(productSelectors.selectAll);
+  const { productsLoaded, status } = useAppSelector((state) => state.catalog);
+  const dispatch = useAppDispatch();
+
+  // useEffect(() => {
+  //   agent.Products.list()
+  //     .then((res) => setProducts(res))
+  //     .catch((error) => setError(error.response))
+  //     .finally(() => setLoading(false));
+  // }, []);
+
   useEffect(() => {
-    agent.Products.list()
-      .then((res) => setProducts(res))
-      .catch((error) => setError(error.response))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!productsLoaded) dispatch(fetchProductsAsync());
+  }, [productsLoaded, dispatch]);
 
   return (
     <>
       <h1>Latest Products</h1>
 
-      {loading ? (
+      {status.includes("pending") ? (
         <Loader />
       ) : error ? (
         <Message variant="danger">{error}</Message>

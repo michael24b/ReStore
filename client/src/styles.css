@@ -11,6 +11,10 @@ main {
   border-collapse: separate;
   border-spacing: 0 10px;
 }
+
+.bg {
+  color: #7b8ab8;
+}
 /* .card {
   width: 20rem;
   height: 20rem;
