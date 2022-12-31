@@ -8,7 +8,12 @@ import agent from "../api/agent";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
 import { useAppDispatch, useAppSelector } from "../store/configureStore";
-import { fetchProductsAsync, productSelectors } from "../slices/catalogSlice";
+import {
+  fetchFilters,
+  fetchProductsAsync,
+  productSelectors,
+} from "../slices/catalogSlice";
+import Options from "../components/Options";
 
 function HomeScreen() {
   // const [products, setProducts] = useState<Product[]>([]);
@@ -16,7 +21,9 @@ function HomeScreen() {
   const [error, setError] = useState<any>("");
 
   const products = useAppSelector(productSelectors.selectAll);
-  const { productsLoaded, status } = useAppSelector((state) => state.catalog);
+  const { productsLoaded, status, filtersLoaded } = useAppSelector(
+    (state) => state.catalog
+  );
   const dispatch = useAppDispatch();
 
   // useEffect(() => {
@@ -30,9 +37,14 @@ function HomeScreen() {
     if (!productsLoaded) dispatch(fetchProductsAsync());
   }, [productsLoaded, dispatch]);
 
+  useEffect(() => {
+    if (!filtersLoaded) dispatch(fetchFilters());
+  }, [filtersLoaded, dispatch]);
+
   return (
     <>
-      <h1>Latest Products</h1>
+      <Options />
+      <Options />
 
       {status.includes("pending") ? (
         <Loader />

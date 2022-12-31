@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Navbar, Nav } from "react-bootstrap";
+import { Container, Navbar, Nav, Form, Button } from "react-bootstrap";
 import { useAppSelector } from "../store/configureStore";
 
 function Header() {
@@ -13,6 +13,15 @@ function Header() {
       <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
         <Container>
           <Navbar.Brand href="/">ReStore</Navbar.Brand>
+          <Form className="d-flex">
+            <Form.Control
+              type="search"
+              placeholder="Search"
+              className="me-sm-2"
+              aria-label="Search"
+            />
+            <Button variant="btn btn-secondary my-2 my-sm-0">Search</Button>
+          </Form>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse className="flex-grow-0" id="basic-navbar-nav">
             <Nav className="ml-auto">

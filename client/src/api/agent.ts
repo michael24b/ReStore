@@ -15,6 +15,7 @@ const requests = {
 const Products = {
   list: () => requests.get("products"),
   details: (id: number) => requests.get(`products/${id}`),
+  fetchFilters: () => requests.get("products/filters"),
 };
 
 const Basket = {
@@ -36,6 +37,7 @@ const Basket = {
 const agent = {
   Products,
   Basket,
+
   // TestErrors,
 };
 

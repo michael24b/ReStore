@@ -6,9 +6,7 @@ interface Props {
 }
 const Message = ({ variant, children }: Props) => {
   return (
-    <Alert variant={variant}>
-      {children.statusText || children.status || children.response.data.title}
-    </Alert>
+    <Alert variant={variant}>{children.statusText || children.status}</Alert>
   );
 };
 

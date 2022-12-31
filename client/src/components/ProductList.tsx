@@ -4,6 +4,8 @@ import { Product } from "../models/product";
 import { useState } from "react";
 import agent from "../api/agent";
 import { currencyFormat } from "../util/util";
+import { useAppDispatch } from "../store/configureStore";
+import { addBasketItemAsync } from "../slices/basketSlice";
 
 interface Props {
   product: Product;
@@ -12,12 +14,15 @@ interface Props {
 function ProductList({ product }: Props) {
   const [loading, setLoading] = useState(false);
 
-  const handlerAddItem = (productId: number) => {
-    setLoading(true);
-    agent.Basket.addItem(productId)
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
-  };
+  // const handlerAddItem = (productId: number) => {
+  //   setLoading(true);
+  //   agent.Basket.addItem(productId)
+  //     .catch((error) => console.log(error))
+  //     .finally(() => setLoading(false));
+  // };
+
+  const dispatch = useAppDispatch();
+
   return (
     <Card className="my-3 p-3 rounded">
       {/* <Link to={`/product/${product._id}`}> */}
@@ -54,7 +59,9 @@ function ProductList({ product }: Props) {
           <Link to="/" className=" p-1 flex-fill text-center">
             <Button
               className=" btn-sm"
-              onClick={() => handlerAddItem(product.id)}
+              onClick={() =>
+                dispatch(addBasketItemAsync({ productId: product.id }))
+              }
             >
               {loading ? (
                 <>
